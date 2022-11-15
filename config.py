@@ -1,0 +1,10 @@
+#path = "./data/point_data/"
+point_path = "./data/point_data/"
+measurement_path = "./data/measurement_data/"
+matrix_path = './data/matrix_data/'
+output_path = './data/output/'
+#rect_path = './data/rect_file.dat'
+rect_file='./data/rect_file.dat'
+pixel_axes = [0, 1, 2, 3]
+matrix_axes = [0, 1, 2, 3, 4]
+point_limit = 16
