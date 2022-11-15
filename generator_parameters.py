@@ -27,11 +27,11 @@ class radar_paramaters():
 
 
 list_of_axes =[
-    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 11, 1, 0), True, False, False, False, 64),
-    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 13, 0, 0), True, False, False, False, 64),
-    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 18, 2, 0), True, False, False, False, 64),
-    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 19, 5, 0), True, False, False, False, 64),
-    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 20, 7, 0), True, False, False, False, 64),
+    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 11, 1, 0), True, False, False, False, 1),
+    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 13, 0, 0), True, False, False, False, 1),
+    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 18, 2, 0), True, False, False, False, 1),
+    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 19, 5, 0), True, False, False, False, 1),
+    radar_paramaters(930e6, -71.4882, 42.6233, 130.0, 1/1e6, 3600, 2e6, 80, 0.125, 3600, (2022, 3, 20, 7, 0), True, False, False, False, 1),
 ]
 
 decimated_list_of_axes = [
