@@ -13,10 +13,13 @@ from try_spicey import find_sub, find_dist
 import util
 import datetime as datetime
 
-comm = MPI.COMM_WORLD
-mpi_rank = comm.Get_rank()
-mpi_size = comm.Get_size()
-mpi_admin = mpi_size - 1
+testing = True
+
+if not testing:
+    comm = MPI.COMM_WORLD
+    mpi_rank = comm.Get_rank()
+    mpi_size = comm.Get_size()
+    mpi_admin = mpi_size - 1
 
 #mpi_rank = mpi_size = mpi_admin = 0
 
@@ -46,10 +49,17 @@ def dist(srp_lat,srp_lon,nlat=300,nlon=300):
     d = np.ma.masked_invalid(d)
     return(d,latgrid,longrid)
 
+def new_BW_finder(srp1, srp2, axis_params, dt = 60):
+    srp1_cart = util.lunar2cartesian(srp1[1], srp1[0])
+    srp2_cart = util.lunar2cartesian(srp2[1], srp2[0])
+    diffvec = np.linalg.norm(srp2_cart - srp1_cart)*R_M
+    max_dop = 2 * diffvec / dt * axis_params.obs_frequency / gen.c
+    return(max_dop)
+
 def find_dop(sublat1, sublon1, sublat2, sublon2, dt, axis_params):
     d1,_,_ = dist(sublat1,sublon1)
     d2,_,_ = dist(sublat2,sublon2)
-
+    print(np.max(d2 - d1))
     return 2*axis_params.obs_frequency*(d2-d1)/dt.seconds/gen.c
 
 '''
@@ -260,32 +270,23 @@ def find_average_return(rang, dop, srp1, srp2, bw, sprcs, axis_params, fres, map
         area = 1
 
 
-    samples = 5
-    super_r, super_dop = supersample(rang, dop, axis_params.range_res, fres, samples)
-    north_real = []
-    north_im = []
-    south_real = []
-    south_im = []
-    for ridx in range(samples):
-        for didx in range(samples):
-            point1, point2, elat = create_point(super_r[ridx], super_dop[didx], srp1, srp2, bw)
+ #   samples = 5
+#    super_r, super_dop = supersample(rang, dop, axis_params.range_res, fres, samples)
+#    for ridx in range(samples):
+ #       for didx in range(samples):
+  #          point1, point2, elat = create_point(super_r[ridx], super_dop[didx], srp1, srp2, bw) #DOES NOT APPLY TO NON-DECIMATED SETS
 
-            north = (mapfunc(point1[1], point1[0])+0.01) # surface scattering simulation
-            south = (mapfunc(point2[1], point2[0])+0.01)
+    north = (mapfunc(point1[1], point1[0])+0.01) # surface scattering simulation
+    south = (mapfunc(point2[1], point2[0])+0.01)
 
-            north_adjusted = north # spherical backscatter + ray propagation
-            south_adjusted = south # multiply by pixel area for total power
+    north_adjusted = north # spherical backscatter + ray propagation
+    south_adjusted = south # multiply by pixel area for total power
 
-            north_real.append(np.random.normal(0, np.sqrt(north_adjusted / 2))) # creating real voltage value
-            north_im.append(1j*np.random.normal(0, np.sqrt(north_adjusted / 2))) # creating imaginary voltage value
+    north_real = (np.random.normal(0, np.sqrt(north_adjusted / 2))) # creating real voltage value
+    north_im = (1j*np.random.normal(0, np.sqrt(north_adjusted / 2))) # creating imaginary voltage value
 
-            south_real.append(np.random.normal(0, np.sqrt(south_adjusted / 2))) # these are gaussians with variance equal to signal power
-            south_im.append(1j*np.random.normal(0, np.sqrt(south_adjusted / 2)))
-
-    north_real = np.array(north_real)
-    north_im = np.array(north_im)
-    south_real = np.array(south_real)
-    south_im = np.array(south_im)
+    south_real = (np.random.normal(0, np.sqrt(south_adjusted / 2))) # these are gaussians with variance equal to signal power
+    south_im = (1j*np.random.normal(0, np.sqrt(south_adjusted / 2)))
 
     total_real = north_real + south_real
     total_im = north_im + south_im
@@ -327,7 +328,7 @@ range fil, srp1 fil og srp2 fil, LROC bilde, axis folder, range resolution, freq
 
 
 def write_output(points, axis_num, job_num, point_sums):
-    path = f'{conf.point_path}/a{axis_num}/{job_num}_points.dat'
+    path = f'{conf.point_path}a{axis_num}/{job_num}_points.dat'
     os.makedirs(os.path.dirname(path), exist_ok=True)
     data = [f'{p[0][0]},{p[0][1]} {p[1][0]},{p[1][1]}' for p in points]
     if len(points) == 0:
@@ -337,7 +338,8 @@ def write_output(points, axis_num, job_num, point_sums):
         for line in data:
             fp.write(f'{line}\n')
 
-    path = f'{conf.measurement_path}/a{axis_num}/{job_num}_meas.dat'
+    path = f'{conf.measurement_path}a{axis_num}/{job_num}_meas.dat'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as fp:
         fp.write("# M\n")
         for line in point_sums:
@@ -349,7 +351,7 @@ def create_job_list():
     for axis_num, axis in enumerate(gen.list_of_axes):
         srp1, srp2 = find_srps(axis)
         num_jobs = R_M / axis.range_res
-        for job_num in range(num_jobs):
+        for job_num in range(int(num_jobs)):
             job_list.append((axis_num, job_num, srp1, srp2))
     return job_list
 
@@ -370,9 +372,9 @@ def execute_job(job, mapfunc):
     srp1 = job[2]
     srp2 = job[3]
     axis_params = gen.list_of_axes[axis_num]
-    dops = find_dop(srp1[1], srp1[0], srp2[1], srp2[0], datetime.timedelta(seconds = 60), axis_params)
-    bw = np.max(dops)*4 * np.pi
-    fres = np.pi * 2 * axis_params.RD_decimation_factor * 1 / axis_params.obsdur
+    bw = 2*new_BW_finder(srp1, srp2, axis_params)                                   # IN HERTZ
+
+    fres = axis_params.RD_decimation_factor * 1 / axis_params.obsdur    # ALSO HERTZ
     if axis_params.range_res * job_num <= R_M:
         rang = axis_params.range_res*job_num
     else:
@@ -417,15 +419,17 @@ def main():
         run_admin()
     else:
         # Workers will cary out work
-        run(mpi_rank)
+        run()
 
 def print_sub_to_check(axisnum):
     axis_params = gen.list_of_axes[axisnum]
     print(find_sub(str(datetime.datetime(*axis_params.obsdate)), axis_params.radar_lat, axis_params.radar_lon, axis_params.radar_el))
 
 if __name__ == '__main__':
-    main()
-    #run_test()
+    if testing:
+        run_test()
+    else:
+        main()
 
 
 

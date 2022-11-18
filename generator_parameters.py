@@ -7,8 +7,8 @@ c = 299_792_458
 class radar_paramaters():
     def __init__(self, obs_frequency, radar_lon, radar_lat, radar_el, baud_length, gain, tx_power, noise_temp, duty_cycle, obsdur, obsdate, make_SAR, do_area, do_SPRCS, do_SLAW, RD_decimation_factor = 1):
         self.RD_decimation_factor = RD_decimation_factor                # decimation factor for generating low-resolution datasets. should be integer. 1 if not used
-        self.obs_frequency = obs_frequency                              # central frequency of transmit pulse
-        self.wavelength = c / obs_frequency                             # central wavelength of transmit pulse
+        self.obs_frequency = obs_frequency                              # central frequency of transmit pulse IN HERTZ
+        self.wavelength = c / obs_frequency                             # central wavelength of transmit pulse IN METERS
         self.radar_lon = radar_lon                                      # longitude of radar
         self.radar_lat = radar_lat                                      # latitude of radar
         self.radar_el = radar_el                                        # elevation of radar in meters

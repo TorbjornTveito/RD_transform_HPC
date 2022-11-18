@@ -7,4 +7,4 @@ mpi_size = comm.Get_size()
 
 
 
-print(f'{mpi_rank}/{mpi_size}')
+print(mpi_rank)

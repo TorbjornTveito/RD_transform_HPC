@@ -1,7 +1,9 @@
-#SBATCH --time=00:01:00
+#!/bin/bash
+
+#SBATCH --time=00:30:00
 #SBATCH --account=nn8999k
-#SBATCH --job-name=rd_test
-#SBATCH --ntasks=40
+#SBATCH --job-name=single_axis_test
+#SBATCH --ntasks=256
 #SBATCH --qos=devel
 
-srun python mpi_test.py
+srun python3 RD_generator.py
