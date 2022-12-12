@@ -14,11 +14,12 @@ class radar_paramaters():
         self.radar_el = radar_el                                        # elevation of radar in meters
         self.baud_length = baud_length                                  # baud length of transmitted pulse in seconds
         self.range_res = RD_decimation_factor * c * baud_length / 2     # range resolution in meters
+        self.freq_res = RD_decimation_factor / obsdur                   # frequency resolution in samples per hertz
         self.gain = gain                                                # gain of radar - does not currently support different transmitters and receivers
         self.tx_power = tx_power                                        # transmit power of radar transmitter
         self.noise_temp = noise_temp                                    # noise temperature of receiver in kelvins
         self.duty_cycle = duty_cycle                                    # duty cycle of radar transmitter as a percentage
-        self.obsdur = obsdur                                          # duration of observation in seconds
+        self.obsdur = obsdur                                            # duration of observation in seconds
         self.obsdate = obsdate                                          # Time of observation
         self.make_SAR = make_SAR                                        # whether to do SAR calculations
         self.do_area = do_area                                          # whether to include the effects of SAR pixel area

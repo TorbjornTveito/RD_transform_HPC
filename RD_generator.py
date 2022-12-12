@@ -27,27 +27,10 @@ if not testing:
 # Useful constants
 R_M = 1737.4e3
 
-
-# run function
-def find_range(axis_num, job_num):
-    #SKRIV ET PROGRAM SOM LES UT EN LISTE FRA EN FIL OG VELGE ELEMENT JOB_NUM
-    pass
-
 def find_max_doppler(rang, bw):
     max_dop = np.sqrt(2*rang/R_M - (rang/R_M)**2 ) * bw / 2
     return(max_dop)
 
-def dist(srp_lat,srp_lon,nlat=300,nlon=300):
-    latgrid=np.linspace(-90.0,90.0,num=nlat)
-    longrid=np.linspace(-180.0,180.0,num=nlon)
-    lats,lons=np.meshgrid(latgrid,longrid)
-    x,y,z=R_M*util.lunar2cartesian(lats,lons)
-    sc=util.lunar2cartesian(srp_lat,srp_lon)
-    d=R_M-(x*sc[0]+y*sc[1]+z*sc[2])
-    inv=np.where(d > R_M)
-    d[inv]=np.nan
-    d = np.ma.masked_invalid(d)
-    return(d,latgrid,longrid)
 
 def new_BW_finder(srp1, srp2, axis_params, dt = 60):
     srp1_cart = util.lunar2cartesian(srp1[1], srp1[0])
@@ -56,11 +39,6 @@ def new_BW_finder(srp1, srp2, axis_params, dt = 60):
     max_dop = 2 * diffvec / dt * axis_params.obs_frequency / gen.c
     return(max_dop)
 
-def find_dop(sublat1, sublon1, sublat2, sublon2, dt, axis_params):
-    d1,_,_ = dist(sublat1,sublon1)
-    d2,_,_ = dist(sublat2,sublon2)
-    print(np.max(d2 - d1))
-    return 2*axis_params.obs_frequency*(d2-d1)/dt.seconds/gen.c
 
 '''
 Finds the angle between the north pole and the apparent rotation axis
@@ -223,11 +201,11 @@ def create_dops(rang, axis_params, srp1, srp2, bw, fres, mapfunc, axis_num, job_
         write_output(pointlist, axis_num, job_num, [])
 
 
-def create_point(rang, dop, srp1, srp2, bw):
+def create_point(rang, dop, srp1, srp2, bw): # do note that the srps are [lon, lat] but some functions require [lat, lon]
     x = (R_M - rang)/R_M
     y = (-dop / (bw/2))
     z = np.sqrt(np.abs(1 - x**2 - y**2))                            #  the abs() should not actually matter,
-    np_angle = find_np_angle(srp1[0], srp1[1], srp2[0], srp2[1])    #  but i think that due to binning, the length
+    np_angle = find_np_angle(srp1[1], srp1[0], srp2[1], srp2[0])    #  but i think that due to binning, the length
     point = np.array([x, y, z])                                     #  of the xy vector can go over 1. which is bad.
     pair_point = np.array([x, y, -z])                               #  but its not much bigger than 1. which is good.
                                                                     #  less than 0.001 diff, i think.
@@ -235,8 +213,8 @@ def create_point(rang, dop, srp1, srp2, bw):
     point_rotation = np.dot(np_correction_matrix, point)
     pair_rotation = np.dot(np_correction_matrix, pair_point)
 
-    point_sub = rotate_from_srp(point_rotation, srp1[0], srp1[1])
-    pair_sub = rotate_from_srp(pair_rotation, srp1[0], srp1[1])
+    point_sub = rotate_from_srp(point_rotation, srp1[1], srp1[0])
+    pair_sub = rotate_from_srp(pair_rotation, srp1[1], srp1[0])
 
     lat1, lon1 = util.cartesian2lunar(point_sub)
     lat2, lon2 = util.cartesian2lunar(pair_sub)
@@ -351,6 +329,8 @@ def create_job_list():
     for axis_num, axis in enumerate(gen.list_of_axes):
         srp1, srp2 = find_srps(axis)
         num_jobs = R_M / axis.range_res
+        print(num_jobs)
+        quit()
         for job_num in range(int(num_jobs)):
             job_list.append((axis_num, job_num, srp1, srp2))
     return job_list
@@ -371,10 +351,11 @@ def execute_job(job, mapfunc):
     job_num = job[1]
     srp1 = job[2]
     srp2 = job[3]
-    axis_params = gen.list_of_axes[axis_num]
+    axis_params = gen.decimated_list_of_axes[axis_num]
     bw = 2*new_BW_finder(srp1, srp2, axis_params)                                   # IN HERTZ
 
-    fres = axis_params.RD_decimation_factor * 1 / axis_params.obsdur    # ALSO HERTZ
+    fres = axis_params.freq_res                                                     # ALSO HERTZ
+
     if axis_params.range_res * job_num <= R_M:
         rang = axis_params.range_res*job_num
     else:
@@ -394,11 +375,11 @@ def run():
         execute_job(job, mapfunc)
 
 def run_test():
-#    print_sub_to_check(0)
     print(len(gen.list_of_axes))
     for axis_num, axis in enumerate(gen.decimated_list_of_axes):
         print(f'Calculating axis {axis_num}')
         axis_params = axis
+        print()
         srp1, srp2 = find_srps(axis_params)
         print(srp1, srp2)
         mapfunc = load_map()
@@ -409,6 +390,7 @@ def run_test():
             jobs.append(k)
             k +=1
             rang = k*axis_params.range_res
+            #print(rang)
         for i in jobs:
             execute_job((axis_num, i, srp1, srp2), mapfunc)
 
