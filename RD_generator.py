@@ -13,7 +13,9 @@ from try_spicey import find_sub, find_dist
 import util
 import datetime as datetime
 
-testing = True
+from array import array
+
+testing = False
 
 if not testing:
     comm = MPI.COMM_WORLD
@@ -304,7 +306,7 @@ range fil, srp1 fil og srp2 fil, LROC bilde, axis folder, range resolution, freq
 '''
 
 
-
+"""
 def write_output(points, axis_num, job_num, point_sums):
     path = f'{conf.point_path}a{axis_num}/{job_num}_points.dat'
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -322,6 +324,35 @@ def write_output(points, axis_num, job_num, point_sums):
         fp.write("# M\n")
         for line in point_sums:
             fp.write(f'{line}\n')
+
+"""
+
+
+def write_output(points, axis_num, job_num, point_sums):
+    path = f'{conf.point_path}a{axis_num}/{job_num}_points.bin'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    data = [(p[0][0], p[0][1], p[1][0], p[1][1]) for p in points]
+    data = [f for p in data for f in p]
+    data = array('d', data)
+
+    if len(data) == 0:
+        return()
+    with open(path, 'wb') as fp:
+        data.tofile(fp)
+
+    if len(point_sums) == 0:
+        return()
+    path = f'{conf.measurement_path}a{axis_num}/{job_num}_meas.bin'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'wb') as fp:
+        meas = array('d', point_sums)
+        meas.tofile(fp)
+
+
+
+
+
 
 
 def create_job_list():
@@ -393,7 +424,7 @@ def run_test():
             #print(rang)
         for i in jobs:
             execute_job((axis_num, i, srp1, srp2), mapfunc)
-
+            exit()
 
 def main():
     if (mpi_rank == mpi_admin):
