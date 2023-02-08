@@ -1,10 +1,12 @@
-from quadtree import Point, Rect, QuadTree
+from quadtree import Point, Rect, QuadTree, Rect_from_edges
 import numpy as np
 import os
 
 import config as conf
 
 from mpi4py import MPI
+
+from array import array
 
 RUN_WITHOUT_MPI = True
 
@@ -19,10 +21,10 @@ Get the current rectangle to populate based on the rectangle index
 '''
 def get_rect(num):
     with open(conf.rect_file, 'r') as fp:
-        rects = (row.partition("#")[0].rstrip() for row in fp)
-        rects = (row for row in rects if row)
+        rects = [row.partition("#")[0].rstrip() for row in fp]
+        rects = [row.strip('()') for row in rects if row]
         rects = [tuple(map(float, row.split(','))) for row in rects]
-        rect = Rect(*rects[num])
+        rect = Rect_from_edges(*rects[num])
     return rect
 
 def get_num_rects():
@@ -42,16 +44,19 @@ def get_points(axis_list, rect):
         list_of_files = os.listdir(f'{conf.point_path}a{axis}/')
         list_of_files.sort()
         for file in list_of_files:
-            #print(f'file: {file}')
-            with open(f'{conf.point_path}a{axis}/{file}', 'r') as fp:
-                for line in fp.readlines():
-                    line = line.partition("#")[0].rstrip()
-                    if line:
+            if file[-4:] == '.bin':
+                with open(f'{conf.point_path}a{axis}/{file}', 'rb') as fp:
+                    data = array('d')
+                    data.fromstring(fp.read())
+                    data = data.tolist()
+
+                    data = list(zip(data[0::2], data[1::2]))
+
+                    for point in data:
+                        if rect.contains(point):
+                            yield (Point(*point, idx//2))
+
                         idx += 1
-                        for p in line.split():
-                            p = tuple(map(float, p.split(',')))
-                            if rect.contains(p):
-                                yield Point(*p, idx)
 
 
 '''
@@ -59,19 +64,19 @@ Do the magic
 '''
 def calculate(num):
     rect = get_rect(num)
-    rect = Rect(0, 0, 360.01, 180.01)
+    #print(rect)
     grid_tree = QuadTree(rect, conf.point_limit)
 
     colarray = []
     rowarray = []
     for point in get_points(conf.pixel_axes, rect):
         grid_tree.insert(point)
+        #print(point)
     boundary_array = []
     get_boundary_list(grid_tree, boundary_array)
     num_boundaries = len(boundary_array)
-
+    #print(num_boundaries)
     for i, rect in enumerate(boundary_array):
-        print(num_boundaries-i)
         idxes = [point.payload for point in get_points(conf.matrix_axes, rect)]
         rowarray += idxes
         colarray += [i]*len(idxes)
@@ -156,8 +161,8 @@ def main():
         run(mpi_rank)
 
 def main_local_test():
-    num = 0
-    calculate(num)
+    for num in range(2083):
+        calculate(num)
 
 
 if __name__ == "__main__":

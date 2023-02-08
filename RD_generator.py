@@ -304,30 +304,6 @@ def load_map():
 må ha:
 range fil, srp1 fil og srp2 fil, LROC bilde, axis folder, range resolution, frequency resolution.
 '''
-
-
-"""
-def write_output(points, axis_num, job_num, point_sums):
-    path = f'{conf.point_path}a{axis_num}/{job_num}_points.dat'
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    data = [f'{p[0][0]},{p[0][1]} {p[1][0]},{p[1][1]}' for p in points]
-    if len(points) == 0:
-        return()
-    with open(path, 'w') as fp:
-        fp.write("# P1 P2\n")
-        for line in data:
-            fp.write(f'{line}\n')
-
-    path = f'{conf.measurement_path}a{axis_num}/{job_num}_meas.dat'
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w') as fp:
-        fp.write("# M\n")
-        for line in point_sums:
-            fp.write(f'{line}\n')
-
-"""
-
-
 def write_output(points, axis_num, job_num, point_sums):
     path = f'{conf.point_path}a{axis_num}/{job_num}_points.bin'
     os.makedirs(os.path.dirname(path), exist_ok=True)

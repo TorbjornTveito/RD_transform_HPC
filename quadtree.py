@@ -43,6 +43,7 @@ class Point:
             other_x, other_y = other
         return np.hypot(self.x - other_x, self.y - other_y)
 
+
 class Rect:
     """A rectangle centred at (cx, cy) with width w and height h."""
 
@@ -53,8 +54,7 @@ class Rect:
         self.north_edge, self.south_edge = cy - h/2, cy + h/2
 
     def __repr__(self):
-        return str((self.west_edge, self.east_edge, self.north_edge,
-                self.south_edge))
+        return str((self.west_edge, self.north_edge, self.east_edge, self.south_edge))
 
     def __str__(self):
         return '({:.2f}, {:.2f}, {:.2f}, {:.2f})'.format(self.west_edge,
@@ -84,6 +84,21 @@ class Rect:
         x1, y1 = self.west_edge, self.north_edge
         x2, y2 = self.east_edge, self.south_edge
         ax.plot([x1,x2,x2,x1,x1],[y1,y1,y2,y2,y1], c=c, lw=lw, **kwargs)
+
+
+class Rect_from_edges(Rect):
+    def __init__(self, west, north, east, south):
+        self.north_edge = north
+        self.south_edge = south
+        self.east_edge = east
+        self.west_edge = west
+        self.w = east - west
+        self.h = north - south
+        self.cx = west + self.w/2
+        self.cy = south + self.h/2
+        pass
+
+
 
 
 class QuadTree:
